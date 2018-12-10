@@ -1,0 +1,57 @@
+version: '2'
+services:
+  web:
+    mem_limit: 512m
+    build: ./nginx_d/
+    container_name: nginx_c_el1
+    image: nginx:1.10
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../data/nginx:/var/log/nginx
+
+  elasticsearch:
+    mem_limit: 1024m
+    build: ./es_d/
+    container_name: es_c_el1
+    image: es_i_el:1.0.5
+    volumes:
+      - ../data/es:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    environment:
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+
+  logstash:
+    mem_limit: 512m
+    build: ./logstash_d/
+    container_name: logstash_c_el1
+    image: logstash_i_el:1.0.20
+    volumes:
+      - ../data/nginx:/var/log/nginx/
+    external_links:
+      - elasticsearch
+    # ports:
+    #   - 5601:5601
+    networks:
+      - default
+      - es1_default
+
+  kibana:
+    mem_limit: 512m
+    build: ./kibana_d/
+    container_name: kibana_c_el1
+    image: kibana_i_el:1.0.4
+    external_links:
+      - elasticsearch
+    ports:
+      - 5601:5601
+    networks:
+      - default
+      - es1_default
+
+
+networks:
+  es1_default:
+    external:
+      name: es_d_default
